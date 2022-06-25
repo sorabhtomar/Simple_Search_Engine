@@ -1,0 +1,24 @@
+# Project exclude paths
+/.idea/
+/.gradle/
+/Simple Search Engine/Expand the search/task/build/
+/Simple Search Engine/Expand the search/task/out/
+/Simple Search Engine/Expand the search/task/out/production/classes/
+/Simple Search Engine/Inverted Index search/task/build/
+/Simple Search Engine/Inverted Index search/task/out/
+/Simple Search Engine/Inverted Index search/task/out/production/classes/
+/Simple Search Engine/String theory/task1/build/
+/Simple Search Engine/String theory/task1/out/
+/Simple Search Engine/String theory/task1/out/production/classes/
+/Simple Search Engine/Search strategies/task/build/
+/Simple Search Engine/Search strategies/task/out/
+/Simple Search Engine/Search strategies/task/out/production/classes/
+/Simple Search Engine/task/build/
+/Simple Search Engine/task/out/
+/Simple Search Engine/task/out/production/classes/
+/Simple Search Engine/User menu/task/build/
+/Simple Search Engine/User menu/task/out/
+/Simple Search Engine/User menu/task/out/production/classes/
+/Simple Search Engine/X-files/task/build/
+/Simple Search Engine/X-files/task/out/
+/Simple Search Engine/X-files/task/out/production/classes/

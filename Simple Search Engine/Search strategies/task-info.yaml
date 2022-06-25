@@ -1,0 +1,708 @@
+type: edu
+custom_name: stage6
+files:
+- name: src/search/Main.java
+  visible: true
+  text: |
+    package search;
+
+    import java.util.Scanner;
+
+    public class Main {
+        public static void main(String[] args) {
+            Scanner scn = new Scanner(System.in);
+
+            String[] words = scn.nextLine().split("\\s+");
+            String searchWord = scn.next();
+
+            // idx: index of the "search word"
+            // Initialized with an invalid index. In this case, 0 is also an invalid index
+            int idx = -1;
+            for (int i = 0; i < words.length; i++) {
+                if (words[i].equals(searchWord)) {
+                    idx = i + 1;
+                    break;
+                }
+            }
+
+            if (idx == -1) {
+                System.out.println("Not found");
+                return;
+            }
+
+            System.out.println(idx);
+        }
+    }
+  learner_created: false
+- name: test/SearchEngineTests.java
+  visible: false
+  text: |
+    public class SearchEngineTests {
+        public static final String NAMES = "Kristofer Galley\n" +
+            "Fernando Marbury fernando_marbury@gmail.com\n" +
+            "Kristyn Nix nix-kris@gmail.com\n" +
+            "Regenia Enderle\n" +
+            "Malena Gray\n" +
+            "Colette Mattei\n" +
+            "Wendolyn Mcphillips\n" +
+            "Jim Gray\n" +
+            "Coreen Beckham\n" +
+            "Bob Yeh bobyeah@gmail.com\n" +
+            "Shannan Bob stropeshah@gmail.com\n" +
+            "Yer Fillion\n" +
+            "Margene Resendez marres@gmail.com\n" +
+            "Blossom Ambler\n" +
+            "Teri Ledet teri_ledet@gmail.com\n" +
+            "Dana Baron baron@gmail.com\n" +
+            "Abram Goldsberry\n" +
+            "Yer Leopold\n" +
+            "Stefania Trunzo\n" +
+            "Alexis Leopold\n" +
+            "Carlene Bob\n" +
+            "Oliver Dacruz\n" +
+            "Jonie Richter\n" +
+            "Pasquale Gallien gallien@evilcorp.com\n" +
+            "Verdie Gentle\n" +
+            "Gerardo Strouth gallien@evilcorp.com\n" +
+            "Agripina Bob\n" +
+            "Latricia Niebuhr\n" +
+            "Malena Schommer\n" +
+            "Drema Leopold\n" +
+            "Heide Payeur\n" +
+            "Ranae Digiovanni\n" +
+            "Simona Pereira\n" +
+            "Nick Digiovanni\n" +
+            "Angelita Wigington gallien@evilcorp.com\n" +
+            "Elin Gray\n" +
+            "Dwain Trunzo\n" +
+            "Boris Beiler\n" +
+            "Remi Malek fsociefy@gmail.com\n" +
+            "Demetria Hostetler gallien@evilcorp.com\n" +
+            "Nydia Mcduffie\n" +
+            "Florencio Defibaugh\n" +
+            "Warner Giblin\n" +
+            "Bob Mans\n" +
+            "Shu Gray\n" +
+            "Kaycee Gray\n" +
+            "Victorina Froehlich victory@gmail.com\n" +
+            "Roseanne Gray\n" +
+            "Erica Radford hisam@gmail.com\n" +
+            "Elyse Pauling";
+    }
+  learner_created: false
+- name: test/SimpleSearchEngineTest.java
+  visible: false
+  text: |
+    import org.hyperskill.hstest.stage.StageTest;
+    import org.hyperskill.hstest.testcase.CheckResult;
+    import org.hyperskill.hstest.testcase.TestCase;
+
+    import java.util.*;
+
+    class TestClue {
+        String input;
+
+        TestClue(String input) {
+            this.input = input;
+        }
+    }
+
+    public class SimpleSearchEngineTest extends StageTest<TestClue> {
+
+        @Override
+        public List<TestCase<TestClue>> generate() {
+            return Arrays.asList(
+                new TestCase<TestClue>().setAttach(
+                    new TestClue("1\n" +
+                    "ANY\n" +
+                    "bob gallien@evilcorp.com\n" +
+                    "2\n" +
+                    "1\n" +
+                    "NONE\n" +
+                    "bob gallien@evilcorp.com\n" +
+                    "0")).setInput("1\n" +
+                    "ANY\n" +
+                    "bob gallien@evilcorp.com\n" +
+                    "2\n" +
+                    "1\n" +
+                    "NONE\n" +
+                    "bob gallien@evilcorp.com\n" +
+                    "0")
+                    .addArguments("--data", "names.txt")
+                    .addFile("names.txt", SearchEngineTests.NAMES),
+
+
+                new TestCase<TestClue>().setAttach(new TestClue("2\n" +
+                    "1\n" +
+                    "ALL\n" +
+                    "this text never gonna be matched\n" +
+                    "2\n" +
+                    "0")).setInput("2\n" +
+                    "1\n" +
+                    "ALL\n" +
+                    "this text never gonna be matched\n" +
+                    "2\n" +
+                    "0")
+                    .addArguments("--data", "names.txt")
+                    .addFile("names.txt", SearchEngineTests.NAMES)
+            );
+        }
+
+        @Override
+        public CheckResult check(String reply, TestClue clue) {
+            String cR = "\n";
+            List<String> outputLines = new LinkedList<String>(Arrays.asList(reply.split(cR)));
+            String[] inputLines = clue.input.split(cR);
+            String[] reference;
+
+            reference = SearchEngineTests.NAMES.split("\n");
+
+            //clear the list of unnecessary lines, if any
+            List<String> cleanedOutput = new ArrayList<String>();
+            for (int i = 0; i < outputLines.size(); i++) {
+                if (containsItemFromList(outputLines.get(i), reference)) {
+                    cleanedOutput.add(outputLines.get(i).toLowerCase());
+                }
+            }
+
+            int currentInputLine = 0;
+            int currentOutputLine = 0;
+
+            int actionType = -1;
+
+            while (actionType != 0) {
+                try {
+                    actionType = Integer.parseInt(inputLines[currentInputLine]);
+                } catch (NumberFormatException e) {
+                    return new CheckResult(false,
+                        "The number of menu item must be number!");
+                }
+
+                switch (actionType) {
+                    case 1:
+                        currentInputLine++;
+
+                        List<Integer> result = new ArrayList<>();
+
+                        List<String> intendedResult = new ArrayList<>();
+
+                        while (true) {
+                            String mode = inputLines[currentInputLine].trim().toLowerCase();
+                            currentInputLine++;
+
+                            String toSearch = "";
+
+                            if (mode.equalsIgnoreCase("all")) {
+                                toSearch = inputLines[currentInputLine].trim().toLowerCase();
+                                currentInputLine++;
+                                String[] allChecks = toSearch.split(" ");
+
+                                for (String s : reference) {
+                                    s = s.toLowerCase();
+
+                                    boolean isPassedChecks = true;
+
+                                    for (String currCheck : allChecks) {
+                                        if (!(s.contains(" " + currCheck + " ")
+                                            || s.startsWith(currCheck + " ")
+                                            || s.endsWith(" " + currCheck))) {
+
+                                            isPassedChecks = false;
+                                            break;
+                                        }
+                                    }
+
+                                    if (isPassedChecks) {
+                                        intendedResult.add(s);
+                                    }
+                                }
+                                break;
+                            } else if (mode.equalsIgnoreCase("any")) {
+                                toSearch = inputLines[currentInputLine].trim().toLowerCase();
+                                currentInputLine++;
+                                String[] allChecks = toSearch.split(" ");
+
+                                for (String s : reference) {
+                                    s = s.toLowerCase();
+
+                                    boolean isPassedChecks = false;
+
+                                    for (String currCheck : allChecks) {
+                                        if (s.contains(" " + currCheck + " ")
+                                            || s.startsWith(currCheck + " ")
+                                            || s.endsWith(" " + currCheck)) {
+
+                                            isPassedChecks = true;
+                                            break;
+                                        }
+                                    }
+
+                                    if (isPassedChecks) {
+                                        intendedResult.add(s);
+                                    }
+                                }
+                                break;
+                            } else if (mode.equalsIgnoreCase("none")) {
+                                toSearch = inputLines[currentInputLine].trim().toLowerCase();
+                                currentInputLine++;
+                                String[] allChecks = toSearch.split(" ");
+
+                                for (String s : reference) {
+                                    s = s.toLowerCase();
+
+                                    boolean isPassedChecks = true;
+
+                                    for (String currCheck : allChecks) {
+                                        if (s.contains(" " + currCheck + " ")
+                                            || s.startsWith(currCheck + " ")
+                                            || s.endsWith(" " + currCheck)) {
+
+                                            isPassedChecks = false;
+                                            break;
+                                        }
+                                    }
+
+                                    if (isPassedChecks) {
+                                        intendedResult.add(s);
+                                    }
+                                }
+                                break;
+                            }
+                        }
+
+                        String[] userResult = new String[intendedResult.size()];
+                        for (int i = 0; i < intendedResult.size(); i++) {
+                            try {
+                                userResult[i] = cleanedOutput.get(currentOutputLine++);
+                            } catch (IndexOutOfBoundsException e) {
+                                return new CheckResult(false,
+                                    "Seems like you output less than expected. " +
+                                        "Either you've lost someone in the printing of all " +
+                                        "people, or you haven't printed all the necessary " +
+                                        "people in the search.");
+                            }
+                        }
+
+                        String[] correctOutput = intendedResult.toArray(String[]::new);
+
+                        Arrays.sort(correctOutput);
+                        Arrays.sort(userResult);
+
+                        if (!Arrays.equals(correctOutput, userResult)) {
+                            return new CheckResult(false,
+                                "Search result is not equal " +
+                                    "to the expected search");
+                        }
+                        break;
+                    case 2:
+                        currentInputLine++;
+
+                        List<String> intendedResultAll = new ArrayList<>();
+
+                        for (String s : reference) {
+                            s = s.toLowerCase();
+                            intendedResultAll.add(s);
+                        }
+
+                        String[] userResultAll = new String[intendedResultAll.size()];
+                        for (int i = 0; i < intendedResultAll.size(); i++) {
+                            try {
+                                userResultAll[i] = cleanedOutput.get(currentOutputLine++);
+                            } catch (IndexOutOfBoundsException e) {
+                                return new CheckResult(false,
+                                    "Seems like you output less than expected. " +
+                                        "Either you've lost someone in the printing of all " +
+                                        "people, or you haven't printed all the necessary " +
+                                        "people in the search.");
+                            }
+                        }
+
+                        String[] correctOutputAll = intendedResultAll.toArray(String[]::new);
+
+                        Arrays.sort(correctOutputAll);
+                        Arrays.sort(userResultAll);
+
+                        if (!Arrays.equals(correctOutputAll, userResultAll)) {
+                            return new CheckResult(false,
+                                "Looks like you're printing " +
+                                    "unknown people when you enter option 2.");
+                        }
+                        break;
+                    case 0:
+                        return CheckResult.correct();
+                    default:
+                        currentInputLine++;
+                        break;
+                }
+            }
+
+            return CheckResult.correct();
+        }
+
+        private static boolean containsItemFromList(String inputStr, String[] items) {
+            return Arrays.stream(items).parallel().anyMatch(inputStr::contains);
+        }
+    }
+  learner_created: false
+- name: src/search/algos/SearchStrategy.java
+  visible: true
+  text: |
+    package search.algos;
+
+    import java.util.Map;
+    import java.util.Set;
+
+    public interface SearchStrategy {
+        Set<Integer> getResult(Map<String, Set<Integer>> invertedIndex, String query);
+    }
+  learner_created: true
+- name: src/search/Application.java
+  visible: true
+  text: |
+    package search;
+
+    import search.algos.SearchContext;
+    import search.ui.UIManager;
+    import search.utils.Arguments;
+    import search.work.ConcreteSearcher;
+    import search.work.Searcher;
+
+    import java.io.File;
+    import java.io.FileNotFoundException;
+    import java.util.ArrayList;
+    import java.util.List;
+    import java.util.Scanner;
+
+    public class Application {
+        private static Application app;
+
+        private String[] args;
+        private Arguments arguments;
+        private UIManager ui;
+
+        private Application(String[] args) {
+            this.args = args;
+            this.arguments = Arguments.getArguments();
+            this.ui = UIManager.getUIManager();
+        }
+
+        // Lazy Singleton Initialization
+        public static Application getApp(String[] args) {
+            if (app == null) {
+                app = new Application(args);
+            }
+
+            return app;
+        }
+
+        private void processRunArguments() {
+            int position = 0;
+            while (position < args.length) {
+                String option = args[position];
+
+                switch (option) {
+                    case "--data":
+                        arguments.setData(args[position + 1]);
+                        position += 2;
+                        break;
+
+                    default:
+                        position += 1;
+                        ui.printOutput("Invalid command line argument!");
+                        break;
+                }
+            }
+        }
+
+        public void run() {
+            processRunArguments();
+
+            Searcher searcher = new ConcreteSearcher(new SearchContext());
+            searcher.work(arguments);
+        }
+    }
+  learner_created: true
+- name: src/search/ui/UIManager.java
+  visible: true
+  text: |
+    package search.ui;
+
+    import java.util.List;
+    import java.util.Scanner;
+    import java.util.Set;
+
+    public class UIManager {
+        private static UIManager manager;
+        private Scanner scn;
+        private UIManager() {
+            scn = new Scanner(System.in);
+        }
+
+        public static UIManager getUIManager() {
+            if (manager == null) {
+                manager = new UIManager();
+            }
+
+            return manager;
+        }
+
+        public void menu() {
+            printOutput("=== Menu ===");
+            printOutput("1. Find a person");
+            printOutput("2. Print all people");
+            printOutput("0. Exit");
+        }
+
+        public void display(List<String> rows) {
+            for (String row : rows) {
+                printOutput(row);
+            }
+        }
+
+        public void display(List<String> rows, Set<Integer> indices) {
+            for (int index : indices) {
+                printOutput(rows.get(index));
+            }
+        }
+
+        public String getInputLine() {
+            String input = scn.nextLine();
+            return input;
+        }
+
+        public void printOutput(String message) {
+            System.out.println(message);
+        }
+    }
+  learner_created: true
+- name: src/search/work/Searcher.java
+  visible: true
+  text: |
+    package search.work;
+
+    import search.ui.UIManager;
+    import search.utils.Arguments;
+
+    import java.io.File;
+    import java.io.FileNotFoundException;
+    import java.util.*;
+
+    // Will apply "Template method" design pattern in this.
+    public abstract class Searcher {
+        private UIManager ui;
+        private Map<String, Set<Integer>> invertedIndex;
+
+        private List<String> rows;
+
+        public Searcher() {
+            this.ui = UIManager.getUIManager();
+
+            rows = new ArrayList<>();
+            invertedIndex = new HashMap<>();
+        }
+
+        // Template method: It describes the common algorithm, while the subclasses implement steps of the algorithm.
+        // This pattern lets the subclasses implement the steps of the algorithm without changing that algorithm's skeleton.
+        public void work(Arguments args) {
+            readInputFile(args.getData());
+            processRows();
+
+            boolean exit = false;
+            do {
+                ui.menu();
+                int option = Integer.parseInt(ui.getInputLine());
+                ui.printOutput("");
+
+                switch (option) {
+                    case 1:
+                        // performing "search" on a row of data using "query" (by user)
+                        ui.printOutput("Enter a name or email to search all suitable people.");
+                        String query = ui.getInputLine().trim().toLowerCase();
+
+                        Set<Integer> indices = search(args.getData(), invertedIndex, query);
+
+                        if (indices == null) {
+                            ui.printOutput("No matching people found.");
+                        } else {
+                            int count = indices.size();
+                            ui.printOutput(String.format("%d persons found:", count));
+
+                            ui.display(rows, indices);
+                        }
+                        break;
+
+                    case 2:
+                        ui.printOutput("=== List of people ===");
+                        ui.display(rows);
+                        break;
+
+                    case 0:
+                        ui.printOutput("Bye!");
+                        exit = true;
+                        break;
+
+                    default:
+                        ui.printOutput("Incorrect option! Try again.");
+                        break;
+                }
+
+                ui.printOutput("");
+
+            } while (!exit);
+        }
+
+        // Primitive methods (with default implementation provided, for some steps).
+        // This default implementation can be changed by the subclass if needed.
+        private void readInputFile(String filePath) {
+            try (Scanner scn = new Scanner(new File(filePath))) {
+                while (scn.hasNextLine()) {
+                    rows.add(scn.nextLine());
+                }
+            } catch (FileNotFoundException e) {
+                ui.printOutput("File not found!");
+            }
+        }
+
+        private void processRows() {
+            for (int i = 0; i < rows.size(); i++) {
+                String[] words = rows.get(i).split("\\s+");
+
+                for (int j = 0; j < words.length; j++) {
+                    String word = words[j].toLowerCase();
+
+                    if (invertedIndex.containsKey(word)) {
+                        Set<Integer> indices = invertedIndex.get(word);
+                        indices.add(i);
+
+                    } else {
+                        Set<Integer> indices = new HashSet<>();
+                        indices.add(i);
+
+                        invertedIndex.put(word, indices);
+                    }
+                }
+            }
+        }
+
+        // Primitive methods (abstract i.e. which need to be implemented by the concrete class)
+        public abstract Set<Integer> search(String algorithm, Map<String, Set<Integer>> invertedIndex, String query);
+    }
+  learner_created: true
+- name: src/search/utils/Arguments.java
+  visible: true
+  text: |
+    package search.utils;
+
+    public class Arguments {
+        private static Arguments arguments;
+
+        private Arguments() { }
+
+        public static Arguments getArguments() {
+            if (arguments == null) {
+                arguments = new Arguments();
+            }
+
+            return arguments;
+        }
+
+        // data: holds the value of command line argument/flag/option "--data"
+        private String data;
+
+        public String getData() {
+            return data;
+        }
+
+        public void setData(String data) {
+            this.data = data;
+        }
+    }
+  learner_created: true
+- name: src/search/algos/SearchContext.java
+  visible: true
+  text: |
+    package search.algos;
+
+    import java.util.Map;
+    import java.util.Set;
+
+    public class SearchContext {
+        private SearchStrategy strategy;
+
+        // public SearchContext(SearchStrategy strategy) {
+        //     this.strategy = strategy;
+        // }
+
+        public void setStrategy(SearchStrategy strategy) {
+            this.strategy = strategy;
+        }
+
+        public Set<Integer> getResult(Map<String, Set<Integer>> invertedIndex, String query) {
+            return strategy.getResult(invertedIndex, query);
+        }
+    }
+  learner_created: true
+- name: src/search/work/ConcreteSearcher.java
+  visible: true
+  text: |
+    package search.work;
+
+    import search.algos.DefaultSearch;
+    import search.algos.SearchContext;
+    import search.utils.Arguments;
+
+    import java.util.ArrayList;
+    import java.util.List;
+    import java.util.Map;
+    import java.util.Set;
+
+    public class ConcreteSearcher extends Searcher {
+        private SearchContext context;
+
+        public ConcreteSearcher(SearchContext context) {
+            this.context = context;
+        }
+
+        @Override
+        public Set<Integer> search(String algorithm, Map<String, Set<Integer>> invertedIndex, String query) {
+            switch (algorithm) {
+                default:
+                    context.setStrategy(new DefaultSearch());
+                    break;
+            }
+
+            return context.getResult(invertedIndex, query);
+        }
+    }
+  learner_created: true
+- name: src/search/algos/SearchAll.java
+  visible: true
+  text: |
+    package search.algos;
+
+    import java.util.Map;
+    import java.util.Set;
+
+    public class DefaultSearch implements SearchStrategy {
+        @Override
+        public Set<Integer> getResult(Map<String, Set<Integer>> invertedIndex, String query) {
+            return invertedIndex.get(query);
+        }
+    }
+  learner_created: true
+- name: src/search/algos/SearchAny.java
+  visible: true
+  learner_created: true
+- name: src/search/algos/SearchNone.java
+  visible: true
+  learner_created: true
+- name: src/search/algos/SearchDefault.java
+  visible: true
+  learner_created: true
+feedback_link: https://hyperskill.org/learn/step/5501#comment
+status: Solved
+feedback:
+  message: Well done! You've finished the project. Select a new project on <a href="https://hyperskill.org/projects">JetBrains
+    Academy</a> to continue learning.
+  time: Sat, 25 Jun 2022 20:33:27 UTC
+record: 6

@@ -1,0 +1,21 @@
+Straw Hat|Luffy
+Captain|Monkey D. Luffy
+Swordsman|Roronoa Zoro
+Cat Burgler|Nami
+Navigator|Nami
+God|Usopp
+Sniper King|Usopp
+Sniper|Usopp
+Black Leg|Sanji
+Cook|Vinsmoke Sanji
+Pet|Chopper
+Doctor|Chopper
+Devil's Child|Nico Robin
+Archeologist|Nico Robin
+Shipwright|Franky
+Musician|Brook
+Skeleton|Brook
+First Son of the Sea|Jinbe
+Helmsman|Jinbe
+Oni Princess|Yamato
+Oni|Yamato
